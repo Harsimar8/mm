@@ -1,0 +1,60 @@
+<div class="toolbar">
+
+    <button>
+        Select
+    </button>
+
+    <input
+        #fileInput
+        type="file"
+        accept=".json"
+        hidden
+        (change)="onFileSelected($event)">
+
+    <button (click)="fileInput.click()">
+        Upload JSON
+    </button>
+
+    <button (click)="removeJson()">
+        Remove JSON
+    </button>
+
+    <span class="spacer"></span>
+
+    <button>
+        Filters ▼
+    </button>
+
+    <button>
+        🔵 Blue
+    </button>
+
+    <button>
+        🔴 Red
+    </button>
+
+    <button>
+        Save Scenario
+    </button>
+
+    <button>
+        Clear
+    </button>
+
+    <button>
+        Load Scenario
+    </button>
+
+    <button>
+        Split
+    </button>
+
+    <button>
+        Full 2D
+    </button>
+
+    <button>
+        Full 3D
+    </button>
+
+</div>
