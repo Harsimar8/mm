@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
+import { EntityRepository } from '../../core/services/EntityRepository';
 import { EditorState } from '../../core/state/EditorState';
 
 @Component({
@@ -13,13 +13,30 @@ import { EditorState } from '../../core/state/EditorState';
 export class PropertyPanel {
 
   constructor(
-    public editorState: EditorState
-  ) {}
+  public editorState: EditorState,
+  private entityRepository: EntityRepository
+) {}
 
   
   close(): void {
 
   this.editorState.selectedAsset.set(null);
+
+  this.editorState.selectedEntity.set(null);
+
+}
+
+deleteEntity(): void {
+
+  const entity = this.editorState.selectedEntity();
+
+  if (!entity) {
+
+    return;
+
+  }
+
+  this.entityRepository.remove(entity.id);
 
   this.editorState.selectedEntity.set(null);
 

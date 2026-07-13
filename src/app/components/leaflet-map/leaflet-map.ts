@@ -27,10 +27,23 @@ export class LeafletMap implements AfterViewInit, OnDestroy
   constructor(
   private editorState: EditorState,
   private entityRepository: EntityRepository
-) {}
+) {
+   effect(() => {
+
+    const entities = this.entityRepository.all();
+
+    if (this.renderer) {
+
+      this.renderer.render(entities);
+
+    }
+
+  });
+}
   @ViewChild('mapContainer', { static: true })
   mapContainer!: ElementRef<HTMLDivElement>;
 
+  
   private map!: L.Map;
   private renderer!: LeafletEntityRenderer;
 
@@ -58,6 +71,7 @@ export class LeafletMap implements AfterViewInit, OnDestroy
   this.editorState
 );
 this.renderer.render(this.entityRepository.all());
+
   this.map.on('click', this.onMapClick.bind(this));
 
   setTimeout(() => {
@@ -99,7 +113,7 @@ private onMapClick(event: L.LeafletMouseEvent): void {
   );
 
   this.entityRepository.add(entity);
-  this.renderer.render(this.entityRepository.all());
+
 
   console.log("Entity added:", entity);
 
