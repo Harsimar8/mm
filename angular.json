@@ -3,11 +3,11 @@
   "version": 1,
   "cli": {
     "packageManager": "npm",
-    "analytics": "c026a12f-7a84-4dea-9ae4-d251c955d2de"
+    "analytics": false
   },
   "newProjectRoot": "projects",
   "projects": {
-    "mission-editor": {
+    "AirDefense": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -20,15 +20,20 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              }
-            ],
+  {
+    "glob": "**/*",
+    "input": "public"
+  },
+  {
+    "glob": "**/*",
+    "input": "node_modules/cesium/Build/Cesium",
+    "output": "cesium"
+  }
+],
             "styles": [
-              "node_modules/leaflet/dist/leaflet.css",
-              "src/styles.css"
-            ]
+  "node_modules/cesium/Build/Cesium/Widgets/widgets.css",
+  "src/styles.css"
+]
           },
           "configurations": {
             "production": {
@@ -58,10 +63,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "mission-editor:build:production"
+              "buildTarget": "AirDefense:build:production"
             },
             "development": {
-              "buildTarget": "mission-editor:build:development"
+              "buildTarget": "AirDefense:build:development"
             }
           },
           "defaultConfiguration": "development"
