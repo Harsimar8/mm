@@ -1,40 +1,23 @@
 import * as L from 'leaflet';
 
-const ICONS: Record<string, string> = {
-
-  RadarSite: 'radar.jpg',
-
-  Aircraft: 'aircraft.png',
-
-  SamBattery: 'sam.png',
-
-  Ship: 'ship.png',
-
-  GroundTarget: 'target.png'
-
-};
-
+import { EntityIconFactory } from '../../core/factories/EntityIconFactory';
 
 export class LeafletIconFactory {
 
-    
+    static get(entityType: string): L.Icon {
 
-  static get(entityType: string): L.Icon {
+        return L.icon({
 
-    const file = ICONS[entityType] ?? 'default.png';
+            iconUrl: EntityIconFactory.get(entityType),
 
-    return L.icon({
+            iconSize: [32,32],
 
-      iconUrl: `assets/${file}`,
+            iconAnchor: [16,16],
 
-      iconSize: [32, 32],
+            popupAnchor: [0,-16]
 
-      iconAnchor: [16, 16],
+        });
 
-      popupAnchor: [0, -16]
-
-    });
-
-  }
+    }
 
 }

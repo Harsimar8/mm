@@ -9,6 +9,8 @@ import {
 } from '@angular/core';
 
 import * as Cesium from 'cesium';
+import { CesiumEntityRenderer } from "./CesiumEntityRenderer";
+import { EntityRepository } from "../../core/services/EntityRepository";
 
 import { MapSyncService } from '../../core/services/MapSync';
 
@@ -23,65 +25,82 @@ Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOi
 })
 export class CesiumMap implements AfterViewInit, OnDestroy {
 
-constructor() {
+  constructor() {
 
-  effect(() => {
+    effect(() => {
 
       console.log("Cesium effect", this.mapSync.state());
 
-    if (!this.viewer) return;
+      if (!this.viewer) return;
 
-    const state = this.mapSync.state();
-    if (state.source === 'cesium') {
-  return;
-}
+      const state = this.mapSync.state();
+      if (state.source === 'cesium') {
+        return;
+      }
 
-    const current = this.viewer.camera.positionCartographic;
+      const current = this.viewer.camera.positionCartographic;
 
-    const lat = Cesium.Math.toDegrees(current.latitude);
-    const lon = Cesium.Math.toDegrees(current.longitude);
+      const lat = Cesium.Math.toDegrees(current.latitude);
+      const lon = Cesium.Math.toDegrees(current.longitude);
 
-    if (
+      if (
 
-      Math.abs(lat - state.latitude) > 0.0001 ||
+        Math.abs(lat - state.latitude) > 0.0001 ||
 
-      Math.abs(lon - state.longitude) > 0.0001
+        Math.abs(lon - state.longitude) > 0.0001
 
-    ) {
-         this.syncing = true;
+      ) {
+        this.syncing = true;
 
-this.viewer.camera.setView({
+        this.viewer.camera.setView({
 
-  destination: Cesium.Cartesian3.fromDegrees(
-    state.longitude,
-    state.latitude,
-    this.mapSync.leafletZoomToHeight(state.zoom)
-  )
+          destination: Cesium.Cartesian3.fromDegrees(
+            state.longitude,
+            state.latitude,
+            this.mapSync.leafletZoomToHeight(state.zoom)
+          )
 
-});
+        });
 
-clearTimeout(this.syncTimeout);
+        clearTimeout(this.syncTimeout);
 
-this.syncTimeout = setTimeout(() => {
+        this.syncTimeout = setTimeout(() => {
 
-  this.syncing = false;
+          this.syncing = false;
 
-}, 100);
-    }
+        }, 100);
+      }
 
-  });
+    });
 
-}
-   
-@ViewChild('cesiumContainer', { static: true })
-cesiumContainer!: ElementRef<HTMLDivElement>;
+
+    effect(() => {
+
+      const entities = this.entityRepository.all();
+
+      if (this.renderer) {
+
+        this.renderer.render(entities);
+
+      }
+
+    });
+
+  }
+
+  @ViewChild('cesiumContainer', { static: true })
+  cesiumContainer!: ElementRef<HTMLDivElement>;
 
   private viewer!: Cesium.Viewer;
   private readonly mapSync = inject(MapSyncService);
-   private syncing = false;
-   private syncTimeout?: ReturnType<typeof setTimeout>;
+  private renderer!: CesiumEntityRenderer;
 
-ngAfterViewInit(): void {
+  private readonly entityRepository = inject(EntityRepository);
+  private syncing = false;
+  private syncTimeout?: ReturnType<typeof setTimeout>;
+
+  ngAfterViewInit(): void {
+
   this.viewer = new Cesium.Viewer(
     this.cesiumContainer.nativeElement,
     {
@@ -89,45 +108,22 @@ ngAfterViewInit(): void {
     }
   );
 
+  this.renderer = new CesiumEntityRenderer(this.viewer);
+
+  this.renderer.render(this.entityRepository.all());
+
   this.viewer.camera.changed.addEventListener(() => {
 
-    if (this.syncing) {
-    return;
-}
-    console.log("Cesium moved");
-
-    const cartographic = Cesium.Cartographic.fromCartesian(
-      this.viewer.camera.position
-    );
-
-      clearTimeout(this.syncTimeout);
-
-this.syncTimeout = setTimeout(() => {
-
-  this.mapSync.update({
-
-    latitude: Cesium.Math.toDegrees(cartographic.latitude),
-
-    longitude: Cesium.Math.toDegrees(cartographic.longitude),
-
-    zoom: this.mapSync.heightToLeafletZoom(
-      this.viewer.camera.positionCartographic.height
-    ),
-
-    source: 'cesium'
-
-  });
-
-}, 30);
+    // camera sync code
 
   });
 
 }
 
-ngOnDestroy(): void {
+  ngOnDestroy(): void {
 
-  this.viewer.destroy();
+    this.viewer.destroy();
 
-}
+  }
 
 }
