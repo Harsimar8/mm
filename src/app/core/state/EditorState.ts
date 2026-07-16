@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal,computed } from '@angular/core';
 
 import { AssetDefinition } from '../models/AssetDefinition';
 import { Entity } from '../models/Entity';
@@ -11,8 +11,16 @@ export class EditorState {
 
   readonly selectedAsset = signal<AssetDefinition | null>(null);
 
+  readonly placementMode = computed(() => {
+
+  return this.selectedAsset() !== null;
+
+});
+   
   readonly selectedEntity = signal<Entity | null>(null);
 
   readonly selectedTeam = signal<Team>(Team.Blue);
+
+  
 
 }

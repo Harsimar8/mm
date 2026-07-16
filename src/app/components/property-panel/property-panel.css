@@ -33,3 +33,29 @@
     font-size:18px;
 
 }
+
+.placement-banner {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 10px;
+
+  margin-bottom: 12px;
+
+  background: #fff8dc;
+
+  border: 1px solid #d9c87a;
+
+  border-radius: 6px;
+
+}
+
+.placement-banner button {
+
+  cursor: pointer;
+
+}

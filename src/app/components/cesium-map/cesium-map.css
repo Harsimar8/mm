@@ -15,3 +15,25 @@
   height: 100%;
 
 }
+
+.entity-tooltip {
+
+    position: absolute;
+
+    background: rgba(30,30,30,0.95);
+
+    color: white;
+
+    padding: 6px 10px;
+
+    border-radius: 6px;
+
+    font-size: 12px;
+
+    pointer-events: none;
+
+    white-space: nowrap;
+
+    z-index: 1000;
+
+}

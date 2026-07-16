@@ -8,6 +8,7 @@ import {
   inject
 } from '@angular/core';
 
+
 import { MapSyncService } from '../../core/services/MapSync';
 import { LeafletEntityRenderer } from './LeafletEntityRenderer';
 import { EditorState } from '../../core/state/EditorState';

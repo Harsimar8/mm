@@ -80,60 +80,6 @@ this.markers.set(entity.id, marker);
   }
 
   
-// highlight(entityId: string): void {
 
-//   this.markers.forEach(marker => {
-
-//     this.setNormal(marker);
-
-//   });
-
-//   const marker = this.markers.get(entityId);
-
-//   if (!marker) {
-
-//     return;
-
-//   }
-
-//   this.setSelected(marker);
-
-// }
-
-//   private setNormal(marker: L.CircleMarker): void {
-
-//   marker.setStyle({
-
-//     radius: 8,
-
-//     color: '#0066ff',
-
-//     fillColor: '#3399ff',
-
-//     weight: 2,
-
-//     fillOpacity: 1
-
-//   });
-
-// }
-
-// private setSelected(marker: L.CircleMarker): void {
-
-//   marker.setStyle({
-
-//     radius: 11,
-
-//     color: '#ff9800',
-
-//     fillColor: '#ffeb3b',
-
-//     weight: 4,
-
-//     fillOpacity: 1
-
-//   });
-
-// }
 
 }

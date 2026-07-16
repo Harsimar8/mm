@@ -1,5 +1,7 @@
 import * as Cesium from "cesium";
 import { Entity } from "../../core/models/Entity";
+import { EntityIconFactory } from "../../core/factories/EntityIconFactory";
+
 
 export class CesiumEntityRenderer {
 
@@ -43,17 +45,33 @@ export class CesiumEntityRenderer {
 
 },
 
-                label: {
-    text: entity.definition.name,
-    font: "16px sans-serif",
-    fillColor: Cesium.Color.WHITE,
-    outlineColor: Cesium.Color.BLACK,
-    outlineWidth: 6,
-    style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-    pixelOffset: new Cesium.Cartesian2(0, -25),
-    scale: 0.8
-}
+              label: {
+    text:
+`Name: ${entity.definition.name}
+Type: ${entity.definition.entityType}
+Role: ${entity.definition.role}
+Team: ${entity.team}`,
 
+    show: false,
+
+    font: "11px Arial",
+
+    fillColor: Cesium.Color.BLACK,
+
+    showBackground: true,
+    backgroundColor: Cesium.Color.fromCssColorString("#ffffff").withAlpha(0.95),
+
+    outlineColor: Cesium.Color.GRAY,
+    outlineWidth: 1,
+    style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+
+    pixelOffset: new Cesium.Cartesian2(0, -32),
+
+    horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+    verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+
+    disableDepthTestDistance: Number.POSITIVE_INFINITY
+}
             });
 
         }

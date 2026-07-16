@@ -18,9 +18,13 @@ export class PropertyPanel {
 ) {}
 
   
-  close(): void {
+  exitPlacementMode(): void {
 
   this.editorState.selectedAsset.set(null);
+
+}
+
+clearSelection(): void {
 
   this.editorState.selectedEntity.set(null);
 

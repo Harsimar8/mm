@@ -1,5 +1,26 @@
 <div class="property-panel">
 
+  <div
+  class="placement-banner"
+  *ngIf="editorState.placementMode()"
+>
+
+  <div>
+
+    <strong>📍 Placement Mode</strong>
+
+    <br>
+
+    {{ editorState.selectedAsset()?.name }}
+
+  </div>
+
+  <button (click)="exitPlacementMode()">
+    ✕
+</button>
+
+</div>
+
   <!-- ENTITY -->
   <ng-container *ngIf="editorState.selectedEntity() as entity; else assetTemplate">
 
@@ -7,7 +28,9 @@
 
       <h3>Entity Properties</h3>
 
-      <button (click)="editorState.selectedEntity.set(null)">✕</button>
+    <button (click)="clearSelection()">
+    ✕
+</button>
 
     </div>
 
@@ -47,7 +70,9 @@
 
         <h3>Asset Properties</h3>
 
-        <button (click)="close()">✕</button>
+        <button (click)="exitPlacementMode()">
+    ✕
+</button>
 
       </div>
 
