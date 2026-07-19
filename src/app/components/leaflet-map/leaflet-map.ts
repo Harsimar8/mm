@@ -192,6 +192,11 @@ this.syncTimeout = setTimeout(() => {
     console.log("Entity added:", entity);
 
   }
+  public resize(): void {
+
+    this.map.invalidateSize();
+
+}
   ngOnDestroy(): void {
 
     this.map.remove();

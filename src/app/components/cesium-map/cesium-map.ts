@@ -292,6 +292,11 @@ private handleMouseMove(
     this.hoveredEntity = entity;
 
 }
+public resize(): void {
+
+    this.viewer.resize();
+
+}
   ngOnDestroy(): void {
 
     this.viewer.destroy();

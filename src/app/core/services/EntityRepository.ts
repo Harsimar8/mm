@@ -60,4 +60,12 @@ export class EntityRepository {
 
   }
 
+  setAll(entities: Entity[]): void {
+
+  this.entities.set(entities);
+
+  this.save();
+
+}
+
 }

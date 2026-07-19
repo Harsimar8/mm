@@ -11,6 +11,12 @@
         hidden
         (change)="onFileSelected($event)">
 
+        <input
+    #scenarioInput
+    type="file"
+    accept=".json"
+    hidden
+    (change)="loadScenario($event)">
     <button (click)="fileInput.click()">
         Upload JSON
     </button>
@@ -33,28 +39,27 @@
         🔴 Red
     </button>
 
-    <button>
-        Save Scenario
-    </button>
+    <button (click)="saveScenario()">
+    Save Scenario
+</button>
+    <button (click)="clearScenario()">
+    Clear
+</button>
 
-    <button>
-        Clear
-    </button>
+    <button (click)="scenarioInput.click()">
+    Load Scenario
+</button>
 
-    <button>
-        Load Scenario
-    </button>
+   <button (click)="showSplit()">
+    Split
+</button>
 
-    <button>
-        Split
-    </button>
+<button (click)="show2D()">
+    Full 2D
+</button>
 
-    <button>
-        Full 2D
-    </button>
-
-    <button>
-        Full 3D
-    </button>
+<button (click)="show3D()">
+    Full 3D
+</button>
 
 </div>
