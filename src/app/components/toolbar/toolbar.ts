@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component ,signal} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EditorState } from '../../core/state/EditorState';
 import { ViewMode } from '../../core/models/ViewMode';
@@ -6,7 +6,7 @@ import { AssetImportService } from '../../core/services/AssetImportService';
 import { AssetLibraryService } from '../../core/services/AssetLibraryService';
 import { EntityRepository } from '../../core/services/EntityRepository';
 import { ScenarioService } from '../../core/services/ScenarioService';
-
+import { FilterService } from '../../core/services/FilterService';
 
 @Component({
   selector: 'app-toolbar',
@@ -15,16 +15,25 @@ import { ScenarioService } from '../../core/services/ScenarioService';
   templateUrl: './toolbar.html',
   styleUrl: './toolbar.css'
 })
+
+
 export class Toolbar {
 
   constructor(
     private assetImportService: AssetImportService,
-    private assetLibraryService: AssetLibraryService,
+    public assetLibraryService: AssetLibraryService,
     public editorState: EditorState,
-     private entityRepository: EntityRepository,
-       private scenarioService: ScenarioService
-  ) {}
+    private entityRepository: EntityRepository,
+    private scenarioService: ScenarioService,
+    public filterService: FilterService
+) {
 
+    this.filterService.initialize(
+        this.assetLibraryService.entityTypes()
+    );
+
+}
+ readonly showFilters = signal(false);
   async onFileSelected(event: Event): Promise<void> {
 
     const input = event.target as HTMLInputElement;
@@ -33,9 +42,15 @@ export class Toolbar {
       return;
     }
 
-    await this.assetImportService.import(input.files[0]);
+   await this.assetImportService.import(input.files[0]);
 
-    input.value = '';
+console.log(this.assetLibraryService.entityTypes());
+
+this.filterService.initialize(
+    this.assetLibraryService.entityTypes()
+);
+
+console.log(this.filterService.enabledTypes());
   }
 
   removeJson(): void {
@@ -45,7 +60,16 @@ export class Toolbar {
     console.log("Asset library cleared.");
 
   }
+toggleFilters(): void {
 
+  this.showFilters.update(value => !value);
+
+}
+toggleType(type: string): void {
+
+  this.filterService.toggle(type);
+
+}
   showSplit(): void {
 
     this.editorState.viewMode.set(ViewMode.Split);
@@ -95,5 +119,7 @@ loadScenario(event: Event): void {
     input.value = '';
 
 }
+
+
 
 }

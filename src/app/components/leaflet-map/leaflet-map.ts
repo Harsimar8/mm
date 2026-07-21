@@ -43,13 +43,28 @@ export class LeafletMap implements AfterViewInit, OnDestroy {
 
       const center = this.map.getCenter();
 
-      if (
-        Math.abs(center.lat - state.latitude) > 0.0001 ||
-        Math.abs(center.lng - state.longitude) > 0.0001 ||
-        this.map.getZoom() !== state.zoom
-      ) {
+      const zoomDifference =
+    Math.abs(this.map.getZoom() - state.zoom);
 
-        this.syncing = true;
+const latitudeDifference =
+    Math.abs(center.lat - state.latitude);
+
+const longitudeDifference =
+    Math.abs(center.lng - state.longitude);
+
+
+
+     if (
+
+    latitudeDifference < 0.0002 &&
+    longitudeDifference < 0.0002 &&
+    zoomDifference < 0.05
+
+) {
+    return;
+}
+
+this.syncing = true;
 
 this.map.setView(
     [state.latitude, state.longitude],
@@ -66,7 +81,6 @@ this.syncTimeout = setTimeout(() => {
     this.syncing = false;
 
 }, 100);
-      }
 
     });
 
@@ -89,6 +103,7 @@ this.syncTimeout = setTimeout(() => {
   private map!: L.Map;
   private renderer!: LeafletEntityRenderer;
   private readonly mapSync = inject(MapSyncService);
+  private animationFrame?: number;
   private syncing = false;
   private syncTimeout?: ReturnType<typeof setTimeout>;
 
@@ -105,7 +120,7 @@ this.syncTimeout = setTimeout(() => {
       center: [20.5937, 78.9629],
       zoom: 5
     });
-    this.map.on("moveend", () => {
+    this.map.on("move", () => {
 
       if (this.syncing) {
         return;
@@ -113,23 +128,25 @@ this.syncTimeout = setTimeout(() => {
 
       const center = this.map.getCenter();
 
-      clearTimeout(this.syncTimeout);
+      if (this.animationFrame) {
+    cancelAnimationFrame(this.animationFrame);
+}
 
-this.syncTimeout = setTimeout(() => {
+this.animationFrame = requestAnimationFrame(() => {
 
-  this.mapSync.update({
+    this.mapSync.update({
 
-    latitude: center.lat,
+        latitude: center.lat,
 
-    longitude: center.lng,
+        longitude: center.lng,
 
-    zoom: this.map.getZoom(),
+        zoom: this.map.getZoom(),
 
-    source: 'leaflet'
+        source: 'leaflet'
 
-  });
+    });
 
-}, 30);
+});
 
     });
 
@@ -196,7 +213,7 @@ this.syncTimeout = setTimeout(() => {
 
     this.map.invalidateSize();
 
-}
+  }
   ngOnDestroy(): void {
 
     this.map.remove();

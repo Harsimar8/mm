@@ -1,13 +1,26 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal,computed,inject } from '@angular/core';
 import { Entity } from '../models/Entity';
+import { FilterService } from './FilterService';
+
 @Injectable({
   providedIn: 'root'
 })
 export class EntityRepository {
 
   private readonly entities = signal<Entity[]>([]);
+  private readonly filterService = inject(FilterService);
+  
+  readonly all = computed(() => {
 
-  readonly all = this.entities.asReadonly();
+    return this.entities().filter(entity =>
+
+        this.filterService.isVisible(
+            entity.definition.entityType
+        )
+
+    );
+
+});
 
   constructor() {
 

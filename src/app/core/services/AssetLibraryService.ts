@@ -1,6 +1,7 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed,inject } from '@angular/core';
 import { AssetDefinition } from '../models/AssetDefinition';
 import { AssetTreeNode } from '../models/AssetTreeNode';
+
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +25,15 @@ export class AssetLibraryService {
 }
 
   private readonly assets = signal<AssetDefinition[]>([]);
+  readonly entityTypes = computed(() => {
+
+  return [...new Set(
+
+    this.assets().map(asset => asset.entityType)
+
+  )];
+
+});
 
   // Tree automatically updates whenever assets change
   readonly tree = computed(() => {

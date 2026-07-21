@@ -21,24 +21,59 @@ export class MapSyncService {
 
   readonly state = this.viewState.asReadonly();
 
+
+  private readonly earthCircumference = 40075016.686;
+
+private readonly tileSize = 256;
+
+private readonly cesiumFov = Math.PI / 3;
   update(view: MapViewState): void {
 
     this.viewState.set(view);
 
   }
 
-  leafletZoomToHeight(zoom: number): number {
+  leafletZoomToHeight(
+    zoom: number,
+    latitude: number,
+    viewportHeight: number
+): number {
 
-    return 40075016 / Math.pow(2, zoom);
+    const latitudeRadians =
+        latitude * Math.PI / 180;
 
-  }
+    const resolution =
+        (this.earthCircumference * Math.cos(latitudeRadians)) /
+        (this.tileSize * Math.pow(2, zoom));
 
-  heightToLeafletZoom(height: number): number {
+    const visibleMeters =
+        resolution * viewportHeight;
 
-    return Math.round(
-      Math.log2(40075016 / height)
+    return visibleMeters /
+        (2 * Math.tan(this.cesiumFov / 2));
+
+}
+
+  heightToLeafletZoom(
+    height: number,
+    latitude: number,
+    viewportHeight: number
+): number {
+
+    const latitudeRadians =
+        latitude * Math.PI / 180;
+
+    const visibleMeters =
+        2 * height * Math.tan(this.cesiumFov / 2);
+
+    const resolution =
+        visibleMeters / viewportHeight;
+
+    return Math.log2(
+        (this.earthCircumference * Math.cos(latitudeRadians)) /
+        (resolution * this.tileSize)
     );
 
-  }
+}
 
 }

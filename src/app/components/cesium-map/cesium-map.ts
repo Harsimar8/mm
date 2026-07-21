@@ -59,7 +59,11 @@ export class CesiumMap implements AfterViewInit, OnDestroy {
           destination: Cesium.Cartesian3.fromDegrees(
             state.longitude,
             state.latitude,
-            this.mapSync.leafletZoomToHeight(state.zoom)
+            this.mapSync.leafletZoomToHeight(
+              state.zoom,
+              state.latitude,
+              this.viewer.scene.canvas.clientHeight
+            )
           )
 
         });
@@ -96,103 +100,164 @@ export class CesiumMap implements AfterViewInit, OnDestroy {
   private viewer!: Cesium.Viewer;
   private readonly mapSync = inject(MapSyncService);
   private renderer!: CesiumEntityRenderer;
- 
+
   private readonly entityRepository = inject(EntityRepository);
-   private readonly editorState = inject(EditorState);
-   private hoveredEntity?: Cesium.Entity;
+  private readonly editorState = inject(EditorState);
+  private hoveredEntity?: Cesium.Entity;
+  private animationFrame?: number;
 
   private syncing = false;
   private syncTimeout?: ReturnType<typeof setTimeout>;
+  private cesiumSyncFrame: number | null = null;
 
   ngAfterViewInit(): void {
 
-  this.viewer = new Cesium.Viewer(
-    this.cesiumContainer.nativeElement,
-    {
-      terrain: Cesium.Terrain.fromWorldTerrain()
+    this.viewer = new Cesium.Viewer(
+      this.cesiumContainer.nativeElement,
+      {
+        terrain: Cesium.Terrain.fromWorldTerrain()
+      }
+    );
+
+
+    this.renderer = new CesiumEntityRenderer(this.viewer);
+
+    this.renderer.render(this.entityRepository.all());
+
+
+    const handler = new Cesium.ScreenSpaceEventHandler(
+      this.viewer.scene.canvas
+    );
+
+    handler.setInputAction(
+
+      this.handleLeftClick.bind(this),
+
+      Cesium.ScreenSpaceEventType.LEFT_CLICK
+
+    );
+    handler.setInputAction(
+
+      this.handleMouseMove.bind(this),
+
+      Cesium.ScreenSpaceEventType.MOUSE_MOVE
+
+    );
+
+
+
+   this.viewer.camera.moveStart.addEventListener(() => {
+
+    this.startCesiumCameraLoop();
+
+});
+
+this.viewer.camera.moveEnd.addEventListener(() => {
+
+    this.stopCesiumCameraLoop();
+
+});
+  }
+
+  private startCesiumCameraLoop(): void {
+
+    if (this.cesiumSyncFrame !== null) {
+        return;
     }
-  );
 
+    const tick = () => {
 
-  this.renderer = new CesiumEntityRenderer(this.viewer);
+        if (!this.viewer || this.syncing) {
 
-  this.renderer.render(this.entityRepository.all());
+            this.cesiumSyncFrame = null;
+            return;
 
+        }
 
-  const handler = new Cesium.ScreenSpaceEventHandler(
-    this.viewer.scene.canvas
-);
+        const camera = this.viewer.camera.positionCartographic;
 
-handler.setInputAction(
+        const latitude = Cesium.Math.toDegrees(camera.latitude);
+        const longitude = Cesium.Math.toDegrees(camera.longitude);
 
-    this.handleLeftClick.bind(this),
+        this.mapSync.update({
 
-    Cesium.ScreenSpaceEventType.LEFT_CLICK
+            latitude,
+            longitude,
 
-);
-handler.setInputAction(
+            zoom: this.mapSync.heightToLeafletZoom(
+                camera.height,
+                latitude,
+                this.viewer.scene.canvas.clientHeight
+            ),
 
-    this.handleMouseMove.bind(this),
+            source: 'cesium'
 
-    Cesium.ScreenSpaceEventType.MOUSE_MOVE
+        });
 
-);
+        this.cesiumSyncFrame = requestAnimationFrame(tick);
 
+    };
 
-
-  this.viewer.camera.changed.addEventListener(() => {
-
-    // camera sync code
-
-  });
+    this.cesiumSyncFrame = requestAnimationFrame(tick);
 
 }
 
 
+private stopCesiumCameraLoop(): void {
+
+    if (this.cesiumSyncFrame !== null) {
+
+        cancelAnimationFrame(this.cesiumSyncFrame);
+
+        this.cesiumSyncFrame = null;
+
+    }
+
+}
 
 
-private placeEntity(
+  private placeEntity(
     click: Cesium.ScreenSpaceEventHandler.PositionedEvent
-): void {
+  ): void {
 
     const asset = this.editorState.selectedAsset();
 
     if (!asset) {
 
-        console.log("No asset selected.");
+      console.log("No asset selected.");
 
-        return;
+      return;
 
     }
 
     const cartesian = this.viewer.scene.pickPosition(
-        click.position
+      click.position
     );
 
     if (!cartesian) {
-        return;
+      return;
     }
 
     const cartographic =
-        Cesium.Cartographic.fromCartesian(cartesian);
+      Cesium.Cartographic.fromCartesian(cartesian);
 
     const position = new Position(
 
-        Cesium.Math.toDegrees(cartographic.latitude),
+      Cesium.Math.toDegrees(cartographic.latitude),
 
-        Cesium.Math.toDegrees(cartographic.longitude),
+      Cesium.Math.toDegrees(cartographic.longitude),
 
-        cartographic.height
+      cartographic.height
 
     );
 
     const entity = EntityFactory.create(
 
-        asset,
+      asset,
 
-        position,
+      position,
 
-        this.editorState.selectedTeam()
+      this.editorState.selectedTeam()
 
     );
 
@@ -201,66 +266,66 @@ private placeEntity(
     console.log("Entity added:", entity);
     this.editorState.selectedAsset.set(null);
 
-}
+  }
 
-private handleLeftClick(
+  private handleLeftClick(
     click: Cesium.ScreenSpaceEventHandler.PositionedEvent
-): void {
+  ): void {
 
     if (this.editorState.placementMode()) {
 
-        this.placeEntity(click);
+      this.placeEntity(click);
 
     } else {
 
-        this.selectEntity(click);
+      this.selectEntity(click);
 
     }
 
-}
+  }
 
-private selectEntity(
+  private selectEntity(
     click: Cesium.ScreenSpaceEventHandler.PositionedEvent
-): void {
+  ): void {
 
     const picked = this.viewer.scene.pick(click.position);
 
-   if (!Cesium.defined(picked)) {
+    if (!Cesium.defined(picked)) {
 
-    this.editorState.selectedEntity.set(null);
+      this.editorState.selectedEntity.set(null);
 
-    return;
+      return;
 
-}
+    }
 
     const pickedEntity = (picked as any).id;
 
     if (!pickedEntity) {
-        return;
+      return;
     }
 
     const entity = this.entityRepository
-        .all()
-        .find(e => e.id === pickedEntity.id);
+      .all()
+      .find(e => e.id === pickedEntity.id);
 
     if (!entity) {
-        return;
+      return;
     }
 
     this.editorState.selectedEntity.set(entity);
 
-}
+  }
 
 
-private handleMouseMove(
+  private handleMouseMove(
     movement: Cesium.ScreenSpaceEventHandler.MotionEvent
-): void {
+  ): void {
 
     // Hide the previous label
     if (this.hoveredEntity?.label) {
 
-        this.hoveredEntity.label.show =
-    new Cesium.ConstantProperty(false);
+      this.hoveredEntity.label.show =
+        new Cesium.ConstantProperty(false);
 
     }
 
@@ -268,12 +333,12 @@ private handleMouseMove(
 
     // Find what the mouse is currently over
     const picked = this.viewer.scene.pick(
-        movement.endPosition
+      movement.endPosition
     );
 
     if (!Cesium.defined(picked)) {
 
-        return;
+      return;
 
     }
 
@@ -281,22 +346,22 @@ private handleMouseMove(
 
     if (!entity?.label) {
 
-        return;
+      return;
 
     }
 
     // Show this entity's label
     entity.label.show =
-    new Cesium.ConstantProperty(true);
+      new Cesium.ConstantProperty(true);
 
     this.hoveredEntity = entity;
 
-}
-public resize(): void {
+  }
+  public resize(): void {
 
     this.viewer.resize();
 
-}
+  }
   ngOnDestroy(): void {
 
     this.viewer.destroy();
