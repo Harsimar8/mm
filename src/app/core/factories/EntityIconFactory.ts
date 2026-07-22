@@ -1,8 +1,10 @@
 const ICONS: Record<string, string> = {
 
-  RadarSite: 'radar.jpg',
+  RadarSite: 'radar.png',
 
   Aircraft: 'aircraft.png',
+  AWACS : 'awacs.png',
+  
 
   SamBattery: 'sam.png',
 

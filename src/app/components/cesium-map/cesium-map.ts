@@ -83,17 +83,20 @@ export class CesiumMap implements AfterViewInit, OnDestroy {
     });
 
 
-    effect(() => {
+   effect(() => {
 
-      const entities = this.entityRepository.all();
+    const entities = this.entityRepository.all();
 
-      if (this.renderer) {
+    // Make this effect rerun when selection changes
+    this.editorState.selectedEntity();
+
+    if (this.renderer) {
 
         this.renderer.render(entities);
 
-      }
+    }
 
-    });
+});
 
   }
 
@@ -126,7 +129,10 @@ export class CesiumMap implements AfterViewInit, OnDestroy {
     );
 
 
-    this.renderer = new CesiumEntityRenderer(this.viewer);
+    this.renderer = new CesiumEntityRenderer(
+    this.viewer,
+    this.editorState
+);
     this.placement = new CesiumPlacement(
 
     this.viewer,

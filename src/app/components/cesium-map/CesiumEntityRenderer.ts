@@ -1,13 +1,14 @@
 import * as Cesium from "cesium";
 import { Entity } from "../../core/models/Entity";
 import { EntityIconFactory } from "../../core/factories/EntityIconFactory";
-
+import { EditorState } from "../../core/state/EditorState";
 
 export class CesiumEntityRenderer {
 
     constructor(
-        private viewer: Cesium.Viewer
-    ) {}
+    private viewer: Cesium.Viewer,
+    private editorState: EditorState
+) {}
 
     render(entities: Entity[]): void {
 
@@ -15,6 +16,13 @@ export class CesiumEntityRenderer {
 
         for (const entity of entities) {
 
+            const selected =
+    this.editorState.selectedEntity()?.id === entity.id;
+
+    console.log(
+    entity.definition.name,
+    selected
+);
             this.viewer.entities.add({
 
                 id: entity.id,
@@ -29,22 +37,27 @@ export class CesiumEntityRenderer {
 
                 ),
 
-               billboard: {
+              billboard: {
 
     image: EntityIconFactory.get(
-
         entity.definition.entityType
-
     ),
 
-    width: 32,
+    width: selected ? 36 : 32,
 
-    height: 32,
+    height: selected ? 36 : 32,
+
+    scale: selected ? 1.08 : 1.0,
+
+    color: selected
+        ? Cesium.Color.fromCssColorString("#FFF8DC")
+        : Cesium.Color.WHITE,
+
+    disableDepthTestDistance: Number.POSITIVE_INFINITY,
 
     verticalOrigin: Cesium.VerticalOrigin.BOTTOM
 
 },
-
               label: {
     text:
 `Name: ${entity.definition.name}

@@ -88,15 +88,18 @@ this.syncTimeout = setTimeout(() => {
 
     effect(() => {
 
-      const entities = this.entityRepository.all();
+  const entities = this.entityRepository.all();
 
-      if (this.renderer) {
+  // Read the selected entity so this effect reruns when it changes.
+  this.editorState.selectedEntity();
 
-        this.renderer.render(entities);
+  if (this.renderer) {
 
-      }
+    this.renderer.render(entities);
 
-    });
+  }
+
+});
   }
   @ViewChild('mapContainer', { static: true })
   mapContainer!: ElementRef<HTMLDivElement>;
@@ -162,7 +165,8 @@ this.animationFrame = requestAnimationFrame(() => {
     ).addTo(this.map);
     this.renderer = new LeafletEntityRenderer(
     this.map,
-    this.selection
+    this.editorState
+    
 );
     this.renderer.render(this.entityRepository.all());
 
