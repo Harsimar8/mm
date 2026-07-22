@@ -2,14 +2,15 @@ import * as L from 'leaflet';
 import { EditorState } from '../../core/state/EditorState';
 import { Entity } from '../../core/models/Entity';
 import { LeafletIconFactory } from './LeafletIconFactory';
+import { LeafletSelection } from "./LeafletSelection";
 
 export class LeafletEntityRenderer {
 
   private readonly markers = new Map<string, L.Marker>();
   constructor(
     private map: L.Map,
-      private editorState: EditorState
-  ) {}
+    private selection: LeafletSelection
+) {}
 
   render(entities: Entity[]): void {
 
@@ -53,9 +54,7 @@ marker.bindTooltip(
 );
 marker.on('click', () => {
 
-  this.editorState.selectedEntity.set(entity);
-
-  // this.highlight(entity.id);
+    this.selection.select(entity);
 
 });
 

@@ -9,13 +9,16 @@ import {
 } from '@angular/core';
 
 import * as Cesium from 'cesium';
+import { CesiumPlacement } from './CesiumPlacement';
 import { CesiumEntityRenderer } from "./CesiumEntityRenderer";
+import { CesiumHover } from "./CesiumHover";
+
 import { EntityRepository } from "../../core/services/EntityRepository";
 import { EditorState } from '../../core/state/EditorState';
 import { EntityFactory } from '../../core/factories/EntityFactory';
 import { Position } from '../../core/models/Position';
 import { MapSyncService } from '../../core/services/MapSync';
-
+import { CesiumSelection } from "./CesiumSelection";
 
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNzFhZjQzZC0xNGNmLTQyNDAtOTFlMC1jMmEyMDQwOTExNDAiLCJpZCI6NDQyMjYxLCJzdWIiOiJIYXJzaW1hcjA4IiwiaXNzIjoiaHR0cHM6Ly9hcGkuY2VzaXVtLmNvbSIsImF1ZCI6Im1pc3Npb24iLCJpYXQiOjE3ODQwMDU4MjB9.NzxkVB0Hlz8uYySEa5PaSg7bycWumdeeUXiaJgk57XY';
 @Component({
@@ -100,10 +103,13 @@ export class CesiumMap implements AfterViewInit, OnDestroy {
   private viewer!: Cesium.Viewer;
   private readonly mapSync = inject(MapSyncService);
   private renderer!: CesiumEntityRenderer;
-
+  private placement!: CesiumPlacement;
+  private hover!: CesiumHover;
+  private selection!: CesiumSelection;
+  
   private readonly entityRepository = inject(EntityRepository);
   private readonly editorState = inject(EditorState);
-  private hoveredEntity?: Cesium.Entity;
+ 
   private animationFrame?: number;
 
   private syncing = false;
@@ -121,6 +127,29 @@ export class CesiumMap implements AfterViewInit, OnDestroy {
 
 
     this.renderer = new CesiumEntityRenderer(this.viewer);
+    this.placement = new CesiumPlacement(
+
+    this.viewer,
+
+    this.editorState,
+
+    this.entityRepository
+
+);
+
+this.selection = new CesiumSelection(
+
+    this.viewer,
+
+    this.editorState,
+
+    this.entityRepository
+
+);
+
+this.hover = new CesiumHover(
+    this.viewer
+);
 
     this.renderer.render(this.entityRepository.all());
 
@@ -138,11 +167,11 @@ export class CesiumMap implements AfterViewInit, OnDestroy {
     );
     handler.setInputAction(
 
-      this.handleMouseMove.bind(this),
+    this.hover.handleMouseMove.bind(this.hover),
 
-      Cesium.ScreenSpaceEventType.MOUSE_MOVE
+    Cesium.ScreenSpaceEventType.MOUSE_MOVE
 
-    );
+);
 
 
 
@@ -216,152 +245,29 @@ private stopCesiumCameraLoop(): void {
 }
 
 
-  private placeEntity(
-    click: Cesium.ScreenSpaceEventHandler.PositionedEvent
-  ): void {
-
-    const asset = this.editorState.selectedAsset();
-
-    if (!asset) {
-
-      console.log("No asset selected.");
-
-      return;
-
-    }
-
-    const cartesian = this.viewer.scene.pickPosition(
-      click.position
-    );
-
-    if (!cartesian) {
-      return;
-    }
-
-    const cartographic =
-      Cesium.Cartographic.fromCartesian(cartesian);
-
-    const position = new Position(
-
-      Cesium.Math.toDegrees(cartographic.latitude),
-
-      Cesium.Math.toDegrees(cartographic.longitude),
-
-      cartographic.height
-
-    );
-
-    const entity = EntityFactory.create(
-
-      asset,
-
-      position,
-
-      this.editorState.selectedTeam()
-
-    );
-
-    this.entityRepository.add(entity);
-
-    console.log("Entity added:", entity);
-    this.editorState.selectedAsset.set(null);
-
-  }
-
+ 
   private handleLeftClick(
     click: Cesium.ScreenSpaceEventHandler.PositionedEvent
   ): void {
 
     if (this.editorState.placementMode()) {
 
-      this.placeEntity(click);
+      this.placement.placeEntity(click);
 
     } else {
 
-      this.selectEntity(click);
+      this.selection.selectEntity(click);
 
     }
 
   }
 
-  private selectEntity(
-    click: Cesium.ScreenSpaceEventHandler.PositionedEvent
-  ): void {
-
-    const picked = this.viewer.scene.pick(click.position);
-
-    if (!Cesium.defined(picked)) {
-
-      this.editorState.selectedEntity.set(null);
-
-      return;
-
-    }
-
-    const pickedEntity = (picked as any).id;
-
-    if (!pickedEntity) {
-      return;
-    }
-
-    const entity = this.entityRepository
-      .all()
-      .find(e => e.id === pickedEntity.id);
-
-    if (!entity) {
-      return;
-    }
-
-    this.editorState.selectedEntity.set(entity);
-
-  }
-
-
-  private handleMouseMove(
-    movement: Cesium.ScreenSpaceEventHandler.MotionEvent
-  ): void {
-
-    // Hide the previous label
-    if (this.hoveredEntity?.label) {
-
-      this.hoveredEntity.label.show =
-        new Cesium.ConstantProperty(false);
-
-    }
-
-    this.hoveredEntity = undefined;
-
-    // Find what the mouse is currently over
-    const picked = this.viewer.scene.pick(
-      movement.endPosition
-    );
-
-    if (!Cesium.defined(picked)) {
-
-      return;
-
-    }
-
-    const entity = (picked as any).id as Cesium.Entity;
-
-    if (!entity?.label) {
-
-      return;
-
-    }
-
-    // Show this entity's label
-    entity.label.show =
-      new Cesium.ConstantProperty(true);
-
-    this.hoveredEntity = entity;
-
-  }
   public resize(): void {
 
     this.viewer.resize();
 
-  }
+}
+
   ngOnDestroy(): void {
 
     this.viewer.destroy();

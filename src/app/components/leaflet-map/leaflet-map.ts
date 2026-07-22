@@ -8,13 +8,15 @@ import {
   inject
 } from '@angular/core';
 
-
+import { LeafletPlacement } from './LeafletPlacement';
 import { MapSyncService } from '../../core/services/MapSync';
 import { LeafletEntityRenderer } from './LeafletEntityRenderer';
 import { EditorState } from '../../core/state/EditorState';
 import { EntityRepository } from '../../core/services/EntityRepository';
 import { EntityFactory } from '../../core/factories/EntityFactory';
 import { Position } from '../../core/models/Position';
+import { LeafletSelection } from "./LeafletSelection";
+
 import * as L from 'leaflet';
 
 @Component({
@@ -103,6 +105,8 @@ this.syncTimeout = setTimeout(() => {
   private map!: L.Map;
   private renderer!: LeafletEntityRenderer;
   private readonly mapSync = inject(MapSyncService);
+  private placement!: LeafletPlacement;
+  private selection!: LeafletSelection;
   private animationFrame?: number;
   private syncing = false;
   private syncTimeout?: ReturnType<typeof setTimeout>;
@@ -157,12 +161,28 @@ this.animationFrame = requestAnimationFrame(() => {
       }
     ).addTo(this.map);
     this.renderer = new LeafletEntityRenderer(
-      this.map,
-      this.editorState
-    );
+    this.map,
+    this.selection
+);
     this.renderer.render(this.entityRepository.all());
 
-    this.map.on('click', this.onMapClick.bind(this));
+    this.placement = new LeafletPlacement(
+
+    this.map,
+
+    this.editorState,
+
+    this.entityRepository
+
+);
+
+this.map.on(
+
+    'click',
+
+    this.placement.onMapClick.bind(this.placement)
+
+);
 
     setTimeout(() => {
       this.map.invalidateSize();
@@ -171,44 +191,7 @@ this.animationFrame = requestAnimationFrame(() => {
   }
 
 
-  private onMapClick(event: L.LeafletMouseEvent): void {
-
-    const asset = this.editorState.selectedAsset();
-
-    if (!asset) {
-
-      console.log("No asset selected.");
-
-      return;
-
-    }
-
-    const position = new Position(
-
-      event.latlng.lat,
-
-      event.latlng.lng,
-
-      0
-
-    );
-
-    const entity = EntityFactory.create(
-
-      asset,
-
-      position,
-
-      this.editorState.selectedTeam()
-
-    );
-
-    this.entityRepository.add(entity);
-
-
-    console.log("Entity added:", entity);
-
-  }
+  
   public resize(): void {
 
     this.map.invalidateSize();
